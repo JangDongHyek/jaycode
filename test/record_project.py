@@ -31,3 +31,5 @@ crm.File.m4a_to_wav(save_path,
         f"{dt}_{row['user_id']}_{row['user_id']}_pt값_{row['customer_name']}_{row['customer_code']}_{row['customer_phone']}_내선.wav")
 row['conversion'] = "true"
 crm.DB.update(rows[0],"receive_history")
+
+#전송로직 * 전송후 가져온파일 및 변환파일은 삭제처리되게

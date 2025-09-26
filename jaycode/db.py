@@ -228,5 +228,4 @@ class DBNamespace :
 
         return affected  # 삭제된 행 수 반환
 
-    def where(self,column,value,logical = "AND",operator = "="):
-        
+
