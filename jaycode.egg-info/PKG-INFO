@@ -1,0 +1,12 @@
+Metadata-Version: 2.1
+Name: jaycode
+Version: 0.1.0
+Summary: Jay library
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+Requires-Dist: paramiko
+Requires-Dist: pymysql
+Requires-Dist: sshtunnel
+
+# jaycode
+25-09-26 패키지 테스트 개발 시작

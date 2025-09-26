@@ -1,0 +1,14 @@
+[project]
+name = "jaycode"
+version = "0.1.0"
+description = "Jay library"
+readme = "README.md"
+requires-python = ">=3.8"
+
+# ✅ 여기에 의존성 적어줌
+dependencies = [
+    "paramiko",
+    "pymysql",
+    "sshtunnel",
+    "ffmpeg-python"
+]
