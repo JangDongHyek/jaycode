@@ -5,8 +5,8 @@ crm.SSH.connect("crm-dev.inp.kr","root","xptmxm12")
 crm.DB.connect("root","xptmxm12","test_jdh")
 
 row = {
-    "center" : "테스트",
-    "user_name" : "tt"
+    "seq" : 7,
+    "table" : "receive_history"
 }
 
-crm.DB.insert(row,"receive_history")
+crm.DB.delete(row)

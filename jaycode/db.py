@@ -198,3 +198,35 @@ class DBNamespace :
             self.conn.commit()
             return cursor.lastrowid  # AUTO_INCREMENT ID 반환
 
+    @check_connection
+    def delete(self, row, table=""):
+        if not isinstance(row, dict):
+            raise RuntimeError("row는 dict형태여야 합니다.")
+        if "table" not in row and not table:
+            raise RuntimeError("지정된 테이블이 없습니다.")
+
+        table = table or row.get("table")
+        table_info = self.is_table(table)
+
+        primary = table_info["primary"]
+        if not primary:
+            raise RuntimeError(f"Primary Key가 지정되지 않은 테이블입니다: {table}")
+
+        if primary not in row:
+            raise RuntimeError(f"row에 Primary Key({primary}) 값이 없습니다.")
+
+        sql = f"DELETE FROM `{table}` WHERE `{primary}` = %s"
+        values = (row[primary],)
+
+        with self.conn.cursor() as cursor:
+            cursor.execute(sql, values)
+            affected = cursor.rowcount
+            self.conn.commit()
+
+        if affected == 0:
+            raise RuntimeError(f"[DB] 삭제 실패: {table}.{primary}={row[primary]} (해당 행 없음)")
+
+        return affected  # 삭제된 행 수 반환
+
+    def where(self,column,value,logical = "AND",operator = "="):
+        

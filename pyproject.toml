@@ -10,7 +10,7 @@ authors = [
 
 #여기에 의존성 적어줌
 dependencies = [
-    "paramiko",
+    "paramiko<3.0",# 키파일 없이 접속하기위해 3.0 미만
     "pymysql",
     "sshtunnel",
     "ffmpeg-python"
