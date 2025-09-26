@@ -66,7 +66,7 @@ class DBNamespace :
 
             self.database = database
 
-            print(f"[DB] 연결 성공 {database}@{user}")
+            print(f"[DB] 연결 성공 {database}@{user}:{port}")
             self.load_tables()
         except Exception as e :
             self.connected = False
@@ -164,3 +164,37 @@ class DBNamespace :
         with self.conn.cursor() as cursor:
             cursor.execute(sql, values)
             self.conn.commit()
+
+    @check_connection
+    def insert(self,row,table = ""):
+        if not isinstance(row, dict):
+            raise RuntimeError("row는 dict형태여야 합니다.")
+        if "table" not in row and not table :
+            raise RuntimeError("지정된 테이블이 없습니다.")
+
+        table = table or row.get("table")
+        table_info = self.is_table(table)
+
+        valid_columns = set(table_info["columns"])
+
+        columns = []
+        placeholders = []
+        values = []
+
+        for col, val in row.items():
+            if col not in valid_columns:  # 테이블에 없는 컬럼이면 무시
+                continue
+            columns.append(f"`{col}`")
+            placeholders.append("%s")
+            values.append(val)
+
+        if not columns:
+            raise RuntimeError("유효한 컬럼 데이터가 없습니다.")
+
+        sql = f"INSERT INTO `{table}` ({', '.join(columns)}) VALUES ({', '.join(placeholders)})"
+
+        with self.conn.cursor() as cursor:
+            cursor.execute(sql, values)
+            self.conn.commit()
+            return cursor.lastrowid  # AUTO_INCREMENT ID 반환
+

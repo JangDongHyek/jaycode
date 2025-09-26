@@ -14,7 +14,7 @@ gasan.SSH.connect(hostname='gasan.sm-tmcall.kr',port=22,username='root',password
 crm.SSH.connect("crm-dev.inp.kr","root","xptmxm12")
 crm.DB.connect("root","xptmxm12","test_jdh")
 
-# 데이터 조회 조건으로 특정것들만 가져오게가능 * cron 가능
+# 데이터 조회
 rows = crm.DB.query("select * from receive_history")
 
 # ssh로 녹취파일 가져오기
