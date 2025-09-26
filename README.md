@@ -2,7 +2,7 @@
 [![PyPI version](https://img.shields.io/pypi/v/jaycode.svg)](https://pypi.org/project/jaycode/)
 [![Downloads](https://img.shields.io/pypi/dm/jaycode.svg)](https://pypi.org/project/jaycode/)
 
-`jaycode` 는 SSH, DB, File 관련 작업을 쉽게 할 수 있는 파이썬 유틸리티 패키지입니다.  
+`jaycode` 는 SSH, DB, File, Crawling 관련 작업을 쉽게 할 수 있는 파이썬 유틸리티 패키지입니다.  
 
 ---
 
