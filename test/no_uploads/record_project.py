@@ -11,7 +11,6 @@ gasan = jaycode.init()
 crm = jaycode.init()
 
 gasan.SSH.connect(hostname='gasan.sm-tmcall.kr',port=22,username='root',password='vhtmzh12')
-exit()
 crm.SSH.connect("crm-dev.inp.kr","root","xptmxm12")
 crm.DB.connect("root","xptmxm12","test_jdh")
 
