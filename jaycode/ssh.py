@@ -40,8 +40,7 @@ class SSHNamespace:
 
         except Exception as e:
             self.connected = False
-            print(f"[SSH] ❌ 연결 실패: {e}")
-            raise ValueError("SSH 연결실패")
+            raise ValueError(f"[SSH] 연결 실패: {e}")
 
     @check_connection
     def get_file(self, remote_path, local_path: str = "", name: str = ""):

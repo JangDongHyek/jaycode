@@ -2,7 +2,7 @@
 [![PyPI version](https://img.shields.io/pypi/v/jaycode.svg)](https://pypi.org/project/jaycode/)
 [![Downloads](https://img.shields.io/pypi/dm/jaycode.svg)](https://pypi.org/project/jaycode/)
 
-`jaycode` 는 SSH, DB, File, Crawling 관련 작업을 쉽게 할 수 있는 파이썬 유틸리티 패키지입니다.  
+`jaycode` 는 SSH, FTP, DB, File, Crawling 관련 작업을 쉽게 할 수 있는 파이썬 유틸리티 패키지입니다.  
 
 ---
 
@@ -16,10 +16,17 @@ pip install jaycode
 ```
 import jaycode
 
-exam = jaycode.Init()
+exam = jaycode.Core()
+
 exam.SSH.connect(hostname=,username=,password=)
+
+exam.FTP.connect(host=,user=,passwd=)
+
 exam.DB.connect(user=,password=,database=)
 exam.DB.insert(dict,'table_name')
+
+exam.Crawling.init()
+exam.Crawling.open('https://naver.com')
 ```
 
 ## 🌲 구조도 (Tree 구조)
@@ -28,6 +35,10 @@ exam.DB.insert(dict,'table_name')
   - **ssh**
     - `connect()` ssh 연결함수
     - `get_file()` 연결된 서버에서 파일 가져오는 함수
+  - **ftp**
+    - `connect()` ftp 연결함수
+    - `get_file()` 연결된 서버에서 파일 가져오는 함수
+    - `upload_file()` 연결된 서버에 파일 업로드 함수
   - **db**
     - `connect()` db 연결함수
     - `insert()`, `update()`, `delete()`, `query()` 등 CRUD 함수

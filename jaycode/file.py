@@ -10,6 +10,10 @@ class FileNamespace:
         ffmpeg 실행 파일을 직접 지정해서 m4a → wav 변환
         https://www.gyan.dev/ffmpeg/builds/ exe 파일 설치 필수
         """
+
+        if not os.path.isfile(ffmpeg_path):
+            raise FileNotFoundError(f"[ffmpeg] 실행 파일을 찾을 수 없습니다: {ffmpeg_path}")
+
         # m4a 절대경로
         m4a_abs = os.path.abspath(m4a_path)
 
