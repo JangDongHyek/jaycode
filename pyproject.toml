@@ -1,6 +1,6 @@
 [project]
 name = "jaycode"
-version = "0.1.3"
+version = "0.1.5"
 description = "Jay library"
 readme = "README.md"
 requires-python = ">=3.8"

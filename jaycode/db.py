@@ -96,10 +96,10 @@ class DBNamespace :
             """, (self.database,))
             table_names = [row[0] for row in cursor.fetchall()]
 
-            # 2️⃣ 각 테이블의 컬럼과 PK 조회
+            # 2️⃣ 각 테이블의 컬럼, PK, 타입 조회
             for tbl in table_names:
                 cursor.execute("""
-                    SELECT COLUMN_NAME, COLUMN_KEY
+                    SELECT COLUMN_NAME, COLUMN_KEY, DATA_TYPE
                     FROM INFORMATION_SCHEMA.COLUMNS
                     WHERE TABLE_SCHEMA = %s AND TABLE_NAME = %s
                 """, (self.database, tbl))
@@ -108,10 +108,14 @@ class DBNamespace :
                 columns = [col[0] for col in columns_data]
                 primary = next((col[0] for col in columns_data if col[1] == "PRI"), None)
 
+                # ✅ 컬럼명 : 데이터타입 매핑
+                columns_type = {col[0]: col[2] for col in columns_data}
+
                 tables.append({
                     "table": tbl,
                     "columns": columns,
-                    "primary": primary
+                    "primary": primary,
+                    "columns_type": columns_type
                 })
 
         self.tables = tables
@@ -129,10 +133,10 @@ class DBNamespace :
         raise RuntimeError(f"테이블이 존재하지 않습니다: {table}")
 
     @check_connection
-    def update(self,row,table = ""):
+    def update(self, row, table=""):
         if not isinstance(row, dict):
             raise RuntimeError("row는 dict형태여야 합니다.")
-        if "table" not in row and not table :
+        if "table" not in row and not table:
             raise RuntimeError("지정된 테이블이 없습니다.")
 
         table = table or row.get("table")
@@ -145,16 +149,29 @@ class DBNamespace :
         if primary not in row:
             raise RuntimeError(f"row 데이터에 Primary Key({primary}) 값이 없습니다.")
 
-        valid_columns = set(table_info["columns"])  # set으로 변경해야 속도가 훨씬 빨라진다.
+        valid_columns = set(table_info["columns"])
+        columns_type = table_info.get("columns_type", {})  # ✅ 컬럼 타입
+
         set_parts = []
         values = []
+
         for col, val in row.items():
             if col in ("table", primary):
                 continue
-            if col not in valid_columns:  # 테이블에 없는 컬럼이면 무시
+            if col not in valid_columns:
                 continue
-            set_parts.append(f"`{col}` = %s")
-            values.append(val)
+
+            # ✅ int 타입 컬럼일 때 문자열이면 콤마 제거
+            if columns_type.get(col, "").lower() in ("int", "bigint", "smallint", "mediumint", "tinyint"):
+                if isinstance(val, str):
+                    val = val.replace(",", "")
+
+            # ✅ now() 처리
+            if isinstance(val, str) and val.lower() == "now()":
+                set_parts.append(f"`{col}` = NOW()")
+            else:
+                set_parts.append(f"`{col}` = %s")
+                values.append(val)
 
         where_clause = f"`{primary}` = %s"
         values.append(row[primary])
@@ -166,16 +183,17 @@ class DBNamespace :
             self.conn.commit()
 
     @check_connection
-    def insert(self,row,table = ""):
+    def insert(self, row, table=""):
         if not isinstance(row, dict):
             raise RuntimeError("row는 dict형태여야 합니다.")
-        if "table" not in row and not table :
+        if "table" not in row and not table:
             raise RuntimeError("지정된 테이블이 없습니다.")
 
         table = table or row.get("table")
         table_info = self.is_table(table)
 
         valid_columns = set(table_info["columns"])
+        columns_type = table_info.get("columns_type", {})  # ✅ 컬럼 타입 정보 가져오기
 
         columns = []
         placeholders = []
@@ -184,9 +202,17 @@ class DBNamespace :
         for col, val in row.items():
             if col not in valid_columns:  # 테이블에 없는 컬럼이면 무시
                 continue
+
+            if columns_type.get(col, "").lower() in ("int", "bigint", "smallint", "mediumint", "tinyint"):
+                if isinstance(val, str):
+                    val = val.replace(",", "")
+
             columns.append(f"`{col}`")
-            placeholders.append("%s")
-            values.append(val)
+            if isinstance(val, str) and val.lower() == "now()":
+                placeholders.append("NOW()")
+            else:
+                placeholders.append("%s")
+                values.append(val)
 
         if not columns:
             raise RuntimeError("유효한 컬럼 데이터가 없습니다.")

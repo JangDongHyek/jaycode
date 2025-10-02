@@ -41,10 +41,18 @@ exam.Crawling.open('https://naver.com')
     - `upload_file()` 연결된 서버에 파일 업로드 함수
   - **db**
     - `connect()` db 연결함수
-    - `insert()`, `update()`, `delete()`, `query()` 등 CRUD 함수
+    - `insert()` 데이터 추가함수
+    - `update()` 데이터 수정함수
+    - `delete()` 데이터 삭제함수
+    - `query()` 쿼리함수
   - **file**
     - `m4a_to_wav()` 파일 변환함수
   - **crawling**
       - `init()` 드라이버 초기화 함수
       - `open()` 페이지 오픈 함수
       - `quit()` 페이지 닫기 함수 
+      - `find()` 엘리먼트를 찾는 함수
+      - `text()` 엘리먼트의 텍스트값을 배열로 반환하는함수
+      - `tab()` 탭을 만들거나 선택하는 함수
+      - `control()` input 타입 컨트롤 하는 함수
+      - `click()` 엘리먼트 클릭후 이벤트가 종료될떄까지 대기하는 함수

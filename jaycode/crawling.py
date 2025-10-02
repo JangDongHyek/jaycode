@@ -4,6 +4,7 @@ from selenium.webdriver.support.ui import WebDriverWait,Select
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, StaleElementReferenceException
 import time
+import types
 
 from selenium.webdriver.common.by import By
 import atexit
@@ -89,7 +90,8 @@ class CrawlingNamespace:
              timeout: int = 2,
              index: int = 0,
              text_search: bool = False,
-             clickable: bool = False):
+             clickable: bool = False,
+             el=None):
         """
         범용 element 탐색 함수
         Args:
@@ -100,11 +102,15 @@ class CrawlingNamespace:
             index (int): 여러 개 중 몇 번째 선택할지 (mode='element'일 때만 적용)
             text_search (bool): 텍스트 포함 검색 허용 여부
             clickable (bool): 클릭 가능한 상태까지 기다릴지 여부
+            el (WebElement): 특정 element 하위에서만 검색할 때 지정
         Returns:
-            element / [elements] / [[text...]]
+            element / [elements] / [text...]
         """
         driver = self.driver
         wait = WebDriverWait(driver, timeout)
+
+        # 검색 context
+        context = el if el is not None else driver
 
         # 검색 전략 정의
         strategies = []
@@ -112,6 +118,8 @@ class CrawlingNamespace:
             strategies = [(By.ID, selector)]
         elif by == "name":
             strategies = [(By.NAME, selector)]
+        elif by == "tag":
+            strategies = [(By.TAG_NAME, selector)]
         elif by == "class":
             strategies = [(By.CLASS_NAME, selector)]
         elif by == "css":
@@ -122,6 +130,7 @@ class CrawlingNamespace:
             strategies = [
                 (By.ID, selector),
                 (By.NAME, selector),
+                (By.TAG_NAME, selector),
                 (By.CLASS_NAME, selector),
                 (By.CSS_SELECTOR, selector),
             ]
@@ -135,51 +144,60 @@ class CrawlingNamespace:
         # 전략 실행
         for by, value in strategies:
             try:
-                condition = None
-                if mode == "elements":
-                    condition = EC.presence_of_all_elements_located((by, value))
-                else:
-                    condition = EC.presence_of_element_located((by, value))
+                # wait.until 은 driver 전역 검색에만 적용
+                if el is None:
+                    condition = None
+                    if mode == "elements":
+                        condition = EC.presence_of_all_elements_located((by, value))
+                    else:
+                        condition = EC.presence_of_element_located((by, value))
 
-                if clickable:
-                    condition = EC.element_to_be_clickable((by, value))
+                    if clickable:
+                        condition = EC.element_to_be_clickable((by, value))
 
-                found = wait.until(condition)
+                    wait.until(condition)
 
                 # elements 모드
                 if mode == "elements":
-                    elements = driver.find_elements(by, value)
-                    return [el for el in elements
-                            if el.tag_name.lower() not in ["script", "style", "meta", "link"]]
+                    elements = context.find_elements(by, value)
+                    return [e for e in elements
+                            if e.tag_name.lower() not in ["script", "style", "meta", "link"]]
 
                 # element 모드
                 if mode == "element":
-                    elements = driver.find_elements(by, value)
-                    clean = [el for el in elements
-                             if el.tag_name.lower() not in ["script", "style", "meta", "link"]]
+                    elements = context.find_elements(by, value)
+                    clean = [e for e in elements
+                             if e.tag_name.lower() not in ["script", "style", "meta", "link"]]
                     if not clean:
                         return None
-                    return clean[index] if index < len(clean) else clean[0]
+
+                    el = clean[index] if index < len(clean) else clean[0]
+                    el.control = types.MethodType(self.control, el)
+
+                    return el
 
                 # text 모드
                 if mode == "text":
-                    elements = driver.find_elements(by, value)
+                    elements = context.find_elements(by, value)
                     texts = []
-                    for el in elements:
-                        if el.tag_name.lower() in ["script", "style", "meta", "link"]:
-                            continue
-                        if el.tag_name.lower() == "tr":
-                            tds = el.find_elements(By.TAG_NAME, "td")
-                            texts.append([td.text.strip() for td in tds])
-                        else:
-                            parts = [t.strip() for t in el.text.split("\n") if t.strip()]
-                            texts.append(parts)
+                    for e in elements:
+                        texts.append(self.text(e))  # self.text() 사용
                     return texts
 
             except (TimeoutException, StaleElementReferenceException):
                 continue
 
         return None if mode != "elements" else []
+
+    def text(self,el):
+        if el.tag_name.lower() in ["script", "style", "meta", "link"]:
+            return []
+        if el.tag_name.lower() == "tr":
+            tds = el.find_elements(By.TAG_NAME, "td")
+            return [td.text.strip() for td in tds]
+
+        else:
+            return [t.strip() for t in el.text.split("\n") if t.strip()]
 
     @check_init
     def tab(self, url: str = "about:blank",timeout: int = 10):
@@ -252,9 +270,25 @@ class CrawlingNamespace:
         tag = el.tag_name.lower()
         input_type = (el.get_attribute("type") or "").lower()
 
+        if str(value).lower() == "click":
+            self.click(el)
+            return el
+
         if tag in ["input", "textarea"]:
             if input_type in ["text", "password", "email", "number", ""] or tag == "textarea":
-                el.send_keys(str(value))
+                self.driver.execute_script("""
+                            arguments[0].value = arguments[1];
+                            arguments[0].dispatchEvent(new Event('input', { bubbles: true }));
+                            arguments[0].dispatchEvent(new Event('change', { bubbles: true }));
+                        """, el, str(value))
+
+            elif input_type == "date":
+                date_str = str(value)  # 예: "2025-10-02"
+                self.driver.execute_script("""
+                        arguments[0].value = arguments[1];
+                        arguments[0].dispatchEvent(new Event('input', { bubbles: true }));
+                        arguments[0].dispatchEvent(new Event('change', { bubbles: true }));
+                    """, el, date_str)
             else:
                 raise TypeError(f"단일 el은 텍스트 입력만 지원합니다. type={input_type}")
 
@@ -270,14 +304,17 @@ class CrawlingNamespace:
     def click(self, el, timeout: int = 5, stable_time: float = 0.5):
         """
         클릭 후 이벤트가 '끝난 느낌'이 날 때까지 대기
-        - 페이지 이동, 리프레시, AJAX 등 구분 없이 안정화만 감지
-        Args:
-            el: WebElement
-            timeout (int): 최대 대기 시간
-            stable_time (float): DOM 안정화로 간주할 연속 시간 (초)
         """
         driver = self.driver
-        el.click()
+
+        # 안전하게 클릭 시도
+        try:
+            el.click()
+        except Exception:
+            # 기본 클릭이 안되면 JS 클릭으로 fallback
+            driver.execute_script("arguments[0].scrollIntoView(true);", el)
+            time.sleep(0.2)
+            driver.execute_script("arguments[0].click();", el)
 
         end_time = time.time() + timeout
         last_source = None
@@ -285,13 +322,11 @@ class CrawlingNamespace:
 
         while time.time() < end_time:
             try:
-                # 1. 문서 로드 상태 확인
                 ready = driver.execute_script("return document.readyState")
                 if ready != "complete":
                     stable_start = None
                     continue
 
-                # 2. jQuery 활성 요청 확인
                 try:
                     active = driver.execute_script("return window.jQuery ? jQuery.active : 0")
                 except Exception:
@@ -301,13 +336,12 @@ class CrawlingNamespace:
                     stable_start = None
                     continue
 
-                # 3. DOM snapshot 비교 (안 변하면 안정)
                 source = driver.page_source
                 if source == last_source:
                     if stable_start is None:
                         stable_start = time.time()
                     elif time.time() - stable_start >= stable_time:
-                        return True  # 안정화 완료
+                        return True
                 else:
                     stable_start = None
                 last_source = source
@@ -315,8 +349,7 @@ class CrawlingNamespace:
                 time.sleep(0.1)
 
             except Exception:
-                # DOM 리로드 중일 수 있으므로 무시
                 stable_start = None
                 time.sleep(0.1)
 
-        return False  # 안정화 실패 (timeout)
+        return False
