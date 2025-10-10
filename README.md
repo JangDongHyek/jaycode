@@ -27,6 +27,7 @@ exam.DB.insert(dict,'table_name')
 
 exam.Crawling.init()
 exam.Crawling.open('https://naver.com')
+exam.Crawling.find('exam',"id",mode="element").control('data or click')
 ```
 
 ## 🌲 구조도 (Tree 구조)

@@ -71,9 +71,7 @@ class SSHNamespace:
             try:
                 sftp.stat(remote_path)
             except FileNotFoundError:
-                print(f"[SSH] ❌ 원격 파일이 존재하지 않습니다: {remote_path}")
-                sftp.close()
-                return None
+                raise Exception(f"[SSH] ❌ 원격 파일이 존재하지 않습니다: {remote_path}")
 
             sftp.get(remote_path, save_path)
             sftp.close()
@@ -82,5 +80,4 @@ class SSHNamespace:
             return save_path
 
         except Exception as e:
-            print(f"[SSH] ❌ 파일 다운로드 실패: {e}")
-            return None
+            raise Exception(f"[SSH] ❌ 파일 다운로드 실패: {e}")

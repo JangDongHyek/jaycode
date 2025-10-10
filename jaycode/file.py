@@ -34,5 +34,4 @@ class FileNamespace:
             print(f"[ffmpeg] 변환 완료: {wav_abs}")
             return wav_abs
         except subprocess.CalledProcessError as e:
-            print(f"[ffmpeg] ❌ 변환 실패: {e.stderr.decode()}")
-            return None
+            raise Exception(f"[ffmpeg] ❌ 변환 실패: {e.stderr.decode()}")

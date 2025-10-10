@@ -214,6 +214,10 @@ class DBNamespace :
                 placeholders.append("%s")
                 values.append(val)
 
+        if "insert_date" in valid_columns and "insert_date" not in row:
+            columns.append("`insert_date`")
+            placeholders.append("NOW()")
+
         if not columns:
             raise RuntimeError("유효한 컬럼 데이터가 없습니다.")
 

@@ -187,7 +187,7 @@ class CrawlingNamespace:
             except (TimeoutException, StaleElementReferenceException):
                 continue
 
-        return None if mode != "elements" else []
+        return [] if mode in ("elements", "text") else None
 
     def text(self,el):
         if el.tag_name.lower() in ["script", "style", "meta", "link"]:

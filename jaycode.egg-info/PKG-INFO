@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: jaycode
-Version: 0.1.4
+Version: 0.1.9
 Summary: Jay library
 Author-email: 장동혁 <jangdonghyek@gmail.com>
 Project-URL: Homepage, https://github.com/JangDongHyek/jaycode?tab=readme-ov-file#jaycode
@@ -10,7 +10,7 @@ Requires-Dist: paramiko<3.0
 Requires-Dist: pymysql
 Requires-Dist: sshtunnel
 Requires-Dist: ffmpeg-python
-Requires-Dist: selenium
+Requires-Dist: selenium>=4.10
 
 # jaycode
 [![PyPI version](https://img.shields.io/pypi/v/jaycode.svg)](https://pypi.org/project/jaycode/)
@@ -69,4 +69,4 @@ exam.Crawling.open('https://naver.com')
       - `text()` 엘리먼트의 텍스트값을 배열로 반환하는함수
       - `tab()` 탭을 만들거나 선택하는 함수
       - `control()` input 타입 컨트롤 하는 함수
-      - `click()` 클릭후 이벤트가 종료될떄까지 대기하는 함수
+      - `click()` 엘리먼트 클릭후 이벤트가 종료될떄까지 대기하는 함수

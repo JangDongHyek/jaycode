@@ -1,5 +1,6 @@
 from ftplib import FTP,error_perm
 import os
+import platform
 
 def check_connection(func):
     def wrapper(self,*args, **kwargs):
@@ -21,6 +22,21 @@ class FTPNamespace:
             self.ftp = FTP()
             self.ftp.connect(host,port=port)
             self.ftp.login(user=user, passwd=passwd)
+
+            # ✅ 서버 OS 감지 (SYST 명령)
+            try:
+                system_info = self.ftp.sendcmd("SYST").lower()
+                if "windows" in system_info:
+                    self.ftp.encoding = "cp949"
+                else:
+                    self.ftp.encoding = "utf-8"
+                print(f"[FTP] 서버 OS 감지: {system_info} → 인코딩 설정: {self.ftp.encoding}")
+            except Exception as e:
+                # 감지 실패 시 기본값
+                self.ftp.encoding = "utf-8"
+                print(f"[FTP] 서버 OS 감지 실패. 기본 인코딩 적용: {self.ftp.encoding} ({e})")
+
+
             print(f"[FTP] 연결 성공: {host}@{user}")
             self.connected = True
         except Exception as e:
@@ -86,7 +102,7 @@ class FTPNamespace:
                     exists = False
 
             if not exists:
-                print(f"[FTP] ❌ 원격 파일이 존재하지 않습니다: {remote_path}")
+                raise Exception(f"[FTP] ❌ 원격 파일이 존재하지 않습니다: {remote_path}")
                 return None
 
             # 다운로드
@@ -98,10 +114,10 @@ class FTPNamespace:
 
         except error_perm as e:
             # 권한 또는 파일 없음 등 서버 응답 관련 오류
-            print(f"[FTP] ❌ 파일 다운로드 실패(서버 응답): {e}")
+            raise Exception(f"[FTP] ❌ 파일 다운로드 실패(서버 응답): {e}")
             return None
         except Exception as e:
-            print(f"[FTP] ❌ 파일 다운로드 실패: {e}")
+            raise Exception(f"[FTP] ❌ 파일 다운로드 실패: {e}")
             return None
 
     @check_connection
@@ -109,13 +125,12 @@ class FTPNamespace:
         """
         FTP로 로컬 파일을 업로드합니다.
         local_path : 업로드할 로컬 파일 전체 경로
-        remote_path: 원격 저장 디렉토리 경로. 비어있으면 루트("/")에 업로드
+        remote_path: 원격 저장 디렉토리 경로. 비어있으면 루트("/")에 업로드 "/test/example" 시 /test/example/name 으로 들어감
         name       : 원격 저장 파일명. 비어있으면 원본 파일명 사용
         """
         try:
             if not os.path.isfile(local_path):
-                print(f"[FTP] ❌ 로컬 파일이 존재하지 않습니다: {local_path}")
-                return None
+                raise Exception(f"[FTP] ❌ 로컬 파일이 존재하지 않습니다: {local_path}")
 
             original_name = os.path.basename(local_path)
             original_ext = os.path.splitext(original_name)[1]
@@ -142,7 +157,18 @@ class FTPNamespace:
             except Exception:
                 pass
 
-            # 업로드
+            # ✅ (1) remote_path가 있다면 경로 생성
+            if remote_path:
+                dirs = remote_path.strip("/").split("/")
+                current = ""
+                for d in dirs:
+                    current += f"/{d}"
+                    try:
+                        ftp.mkd(current)
+                    except Exception:
+                        pass  # 이미 있으면 무시
+
+            # ✅ (2) 업로드 실행
             with open(local_path, "rb") as f:
                 ftp.storbinary(f"STOR {remote_file}", f, blocksize=8192)
 
@@ -150,8 +176,19 @@ class FTPNamespace:
             return remote_file
 
         except error_perm as e:
-            print(f"[FTP] ❌ 파일 업로드 실패(서버 응답): {e}")
-            return None
+            raise Exception(f"[FTP] ❌ 파일 업로드 실패(서버 응답): {e}")
         except Exception as e:
-            print(f"[FTP] ❌ 파일 업로드 실패: {e}")
-            return None
+            raise Exception(f"[FTP] ❌ 파일 업로드 실패: {e}")
+
+    @check_connection
+    def close(self):
+        """
+        FTP 연결을 종료합니다.
+        """
+        try:
+            self.ftp.quit()  # 정상 종료 명령
+            print("[FTP] 연결 종료 완료")
+        except Exception as e:
+            print(f"[FTP] 종료 중 오류 발생: {e}")
+        finally:
+            self.connected = False
