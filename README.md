@@ -1,7 +1,7 @@
 # jaycode
 [![PyPI version](https://img.shields.io/pypi/v/jaycode.svg)](https://pypi.org/project/jaycode/)
 [![Downloads](https://img.shields.io/pypi/dm/jaycode.svg)](https://pypi.org/project/jaycode/)
-
+[![GitHub](https://img.shields.io/badge/GitHub-jaycode-black?logo=github)](https://github.com/JangDongHyek/jaycode)
 `jaycode` 는 SSH, FTP, DB, File, Crawling 관련 작업을 쉽게 할 수 있는 파이썬 유틸리티 패키지입니다.  
 
 ---
