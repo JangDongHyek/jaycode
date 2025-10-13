@@ -35,3 +35,33 @@ class FileNamespace:
             return wav_abs
         except subprocess.CalledProcessError as e:
             raise Exception(f"[ffmpeg] ❌ 변환 실패: {e.stderr.decode()}")
+
+    def delete_file(self,path: str):
+        """
+        지정된 경로의 파일을 삭제합니다.
+        파일이 존재하지 않거나 접근 권한이 없을 경우 예외를 발생시킵니다.
+
+        Args:
+            path (str): 삭제할 파일의 경로
+
+        Raises:
+            FileNotFoundError: 파일이 존재하지 않을 때
+            PermissionError: 파일이 사용 중이거나 권한이 없을 때
+            IsADirectoryError: 경로가 폴더일 때
+            Exception: 기타 예외
+        """
+        # 경로가 존재하지 않음
+        if not os.path.exists(path):
+            raise FileNotFoundError(f"파일이 존재하지 않습니다: {path}")
+
+        # 폴더인 경우
+        if os.path.isdir(path):
+            raise IsADirectoryError(f"지정된 경로는 파일이 아니라 폴더입니다: {path}")
+
+        # 삭제 시도
+        try:
+            os.remove(path)
+        except PermissionError:
+            raise PermissionError(f"파일이 사용 중이거나 권한이 없습니다: {path}")
+        except Exception as e:
+            raise Exception(f"파일 삭제 중 오류 발생: {e}")

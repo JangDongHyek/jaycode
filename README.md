@@ -48,6 +48,7 @@ exam.Crawling.find('exam',"id",mode="element").control('data or click')
     - `query()` 쿼리함수
   - **file**
     - `m4a_to_wav()` 파일 변환함수
+    - `delete_file()` 파일 삭제함수
   - **crawling**
       - `init()` 드라이버 초기화 함수
       - `open()` 페이지 오픈 함수

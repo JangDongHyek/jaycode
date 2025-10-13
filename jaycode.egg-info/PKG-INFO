@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: jaycode
-Version: 0.1.9
+Version: 0.2.1
 Summary: Jay library
 Author-email: 장동혁 <jangdonghyek@gmail.com>
 Project-URL: Homepage, https://github.com/JangDongHyek/jaycode?tab=readme-ov-file#jaycode
@@ -41,6 +41,7 @@ exam.DB.insert(dict,'table_name')
 
 exam.Crawling.init()
 exam.Crawling.open('https://naver.com')
+exam.Crawling.find('exam',"id",mode="element").control('data or click')
 ```
 
 ## 🌲 구조도 (Tree 구조)
@@ -61,6 +62,7 @@ exam.Crawling.open('https://naver.com')
     - `query()` 쿼리함수
   - **file**
     - `m4a_to_wav()` 파일 변환함수
+    - `delete_file()` 파일 삭제함수
   - **crawling**
       - `init()` 드라이버 초기화 함수
       - `open()` 페이지 오픈 함수

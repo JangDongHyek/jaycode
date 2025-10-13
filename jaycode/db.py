@@ -60,7 +60,8 @@ class DBNamespace :
                 user=user,
                 password=password,
                 database=database,
-                charset=charset
+                charset=charset,
+                autocommit=True
             )
             self.connected = True
 
